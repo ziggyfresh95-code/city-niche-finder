@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "City Niche Finder",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Score local niche/city competition off Google's Map Pack + organic results, save leads, rate niches, and export to CSV.",
   "permissions": ["storage", "tabs"],
   "host_permissions": ["https://www.google.com/*", "https://www.google.co.uk/*"],
@@ -23,7 +23,7 @@
   "content_scripts": [
     {
       "matches": ["https://www.google.com/search*", "https://www.google.co.uk/search*"],
-      "js": ["src/niches.js", "src/scoring.js", "src/storage.js", "src/parser.js", "src/content.js"],
+      "js": ["src/niches.js", "src/scoring.js", "src/storage.js", "src/parser.js", "src/cities.js", "src/turbo.js", "src/content.js"],
       "css": ["src/content.css"],
       "run_at": "document_idle"
     }

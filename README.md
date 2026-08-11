@@ -20,6 +20,10 @@ Built for my own workflow after studying how a paid tool (Niche Finder Pro) work
 - **Search launcher + random niche suggester** — from the toolbar popup, type a
   keyword and city (or hit 🎲 for a random niche from 90+ across 10 categories)
   and it opens a scored Google search.
+- **Turbo nearby-city expansion** — expand one city into nearby cities filtered by
+  radius (up to 300 mi) and population range, ranked by distance. Each result
+  opens a fresh scored search — batch-analyze a whole region. Uses a bundled
+  offline US cities dataset (no network calls).
 - **Save leads** — one click saves any Map Pack or organic listing (name, phone,
   website / no-website flag, reviews) as a prospect.
 - **Rate & tag niches** — give each keyword+city combo a 5-star rating and custom
@@ -48,9 +52,15 @@ Built for my own workflow after studying how a paid tool (Niche Finder Pro) work
    - **Sites tab** — organic competitors, whether each looks like a dedicated
      niche site, and RD if Ahrefs is installed.
    - **Rate & Save tab** — give the combo a star rating + tags and save it.
+   - **🚀 Turbo tab** — set a radius and population range, hit **Find nearby
+     cities**, and get a distance-ranked list of nearby towns. Click **search →**
+     on any of them to open a fresh scored search for that city.
 3. Click **＋lead** on any listing to save it as a prospect.
 4. Click the ★ button (top of the sidebar, or in the popup) to open the
    **Favorites** page, filter/sort, and **Export CSV**.
+
+Turbo defaults (radius, population range, max cities, same-state-only) live in
+the popup's ⚙ Settings and can be overridden per-run in the Turbo tab.
 
 The keyword/city fields in the sidebar are editable — if the automatic split of
 your query is off (multi-word cities, etc.), fix it there and it rescans.
@@ -80,6 +90,8 @@ src/
   niches.js            # curated niche database + random picker
   scoring.js           # opportunity scoring (pure, testable)
   parser.js            # Google SERP parsing (map pack + organic)
+  cities.js            # bundled US cities dataset (GeoNames, offline)
+  turbo.js             # nearby-city expansion (Haversine + lookup)
   storage.js           # chrome.storage helpers + CSV builder
   content.js           # injects & renders the sidebar
   content.css          # sidebar styles
@@ -94,10 +106,18 @@ src/
   heuristics (in `src/parser.js`) rather than brittle class names, but if Google
   reshuffles their markup and detection degrades, the sidebar still works — you can
   rate and save manually — and only `src/parser.js` needs updating.
-- **Turbo / nearby-city expansion isn't built yet.** It needs a bundled cities
-  dataset (name, lat/lng, population). The scoring, storage, and export layers are
-  already structured to accept a batch of cities when that's added.
+- **Turbo dataset floor is ~15,000 population.** The bundled `src/cities.js` comes
+  from GeoNames' cities-15000 set (3,400+ US cities). That covers every metro and
+  its significant suburbs, but not sub-15k small towns. To include smaller towns,
+  swap `src/cities.js` for a denser dataset in the same
+  `[name, state, lat, lng, population]` row format — the Turbo code doesn't change.
 - **RD data** currently comes from the Ahrefs SEO Toolbar if you have it. Direct
   integration would need an Ahrefs API key.
+
+## Data & attribution
+
+The bundled US cities dataset (`src/cities.js`) is derived from
+[GeoNames](https://www.geonames.org/) (cities ≥ 15,000 population), licensed
+under CC-BY 4.0.
 
 *Personal-use project. Not affiliated with Niche Finder Pro or Ahrefs.*

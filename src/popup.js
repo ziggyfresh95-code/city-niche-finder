@@ -13,6 +13,11 @@ async function init() {
   $("reviewThreshold").value = s.reviewThreshold;
   $("rdThreshold").value = s.rdThreshold;
   $("resultCount").value = s.resultCount;
+  $("turboDistance").value = s.turboDistance;
+  $("turboLimit").value = s.turboLimit;
+  $("turboPopMin").value = s.turboPopMin;
+  $("turboPopMax").value = s.turboPopMax;
+  $("turboSameState").checked = !!s.turboSameState;
 
   $("random").addEventListener("click", () => {
     const { niche, category } = randomNiche();
@@ -42,6 +47,11 @@ async function init() {
       reviewThreshold: parseInt($("reviewThreshold").value, 10) || 30,
       rdThreshold: parseInt($("rdThreshold").value, 10) || 20,
       resultCount: parseInt($("resultCount").value, 10) || 30,
+      turboDistance: parseInt($("turboDistance").value, 10) || 25,
+      turboLimit: parseInt($("turboLimit").value, 10) || 25,
+      turboPopMin: parseInt($("turboPopMin").value, 10) || 0,
+      turboPopMax: parseInt($("turboPopMax").value, 10) || 150000,
+      turboSameState: $("turboSameState").checked,
     });
     $("save-settings").textContent = "Saved ✓";
     setTimeout(() => ($("save-settings").textContent = "Save settings"), 1200);

@@ -19,6 +19,7 @@
     collapsed: false,
     rating: 0,
     tags: "",
+    turboCities: null, // null = not generated yet
   };
 
   function getQueryParam() {
@@ -110,6 +111,7 @@
     const tabs = el("div", { class: "cnf-tabs" }, [
       tabBtn("mappack", `Map Pack (${state.mapPack.length})`),
       tabBtn("sites", `Sites (${state.organic.length})`),
+      tabBtn("turbo", "🚀 Turbo"),
       tabBtn("rate", "Rate & Save"),
     ]);
     panel.appendChild(tabs);
@@ -117,6 +119,7 @@
     const body = el("div", { class: "cnf-body" });
     if (state.tab === "mappack") body.appendChild(renderMapPack());
     else if (state.tab === "sites") body.appendChild(renderSites());
+    else if (state.tab === "turbo") body.appendChild(renderTurbo());
     else body.appendChild(renderRate());
     panel.appendChild(body);
 
@@ -182,6 +185,68 @@
       ]));
     });
     return wrap;
+  }
+
+  function renderTurbo() {
+    const wrap = el("div", { class: "cnf-turbo" });
+    const s = state.settings;
+
+    // Controls
+    const dist = el("input", { class: "cnf-input cnf-num", type: "number", min: "1", max: "300", value: s.turboDistance, title: "Radius (miles)" });
+    const pmin = el("input", { class: "cnf-input cnf-num", type: "number", min: "0", value: s.turboPopMin, title: "Min population" });
+    const pmax = el("input", { class: "cnf-input cnf-num", type: "number", min: "0", value: s.turboPopMax, title: "Max population" });
+    wrap.appendChild(el("div", { class: "cnf-turbo-controls" }, [
+      labeled("Radius mi", dist), labeled("Pop min", pmin), labeled("Pop max", pmax),
+    ]));
+
+    const generate = () => {
+      const opts = {
+        distanceMiles: parseInt(dist.value, 10) || 25,
+        popMin: parseInt(pmin.value, 10) || 0,
+        popMax: parseInt(pmax.value, 10) || Infinity,
+        limit: s.turboLimit,
+        sameStateOnly: s.turboSameState,
+      };
+      const res = expandLocation(state.location, opts);
+      state.turboOrigin = res.origin;
+      state.turboCities = res.cities;
+      render();
+    };
+    wrap.appendChild(el("button", { class: "cnf-primary", onclick: generate }, "🚀 Find nearby cities"));
+
+    if (state.turboCities == null) {
+      wrap.appendChild(el("div", { class: "cnf-hint" }, `Expand "${state.location || "?"}" into nearby cities for "${state.keyword || "?"}". Each opens a fresh scored search.`));
+      return wrap;
+    }
+    if (!state.turboOrigin) {
+      wrap.appendChild(el("div", { class: "cnf-empty" }, `Couldn't match "${state.location}" to a city. Try "City, ST" (e.g. Tampa, FL).`));
+      return wrap;
+    }
+    wrap.appendChild(el("div", { class: "cnf-hint" }, `From ${state.turboOrigin.name}, ${state.turboOrigin.state} — ${state.turboCities.length} nearby cities:`));
+    if (state.turboCities.length === 0) {
+      wrap.appendChild(el("div", { class: "cnf-empty" }, "No cities in range. Increase the radius or population max."));
+      return wrap;
+    }
+    for (const c of state.turboCities) {
+      wrap.appendChild(el("div", { class: "cnf-item" }, [
+        el("div", { class: "cnf-item-main" }, [
+          el("div", { class: "cnf-item-name" }, `${c.name}, ${c.state}`),
+          el("div", { class: "cnf-item-meta" }, `${c.distance} mi · pop ${c.pop.toLocaleString()}`),
+        ]),
+        el("button", { class: "cnf-save", title: "Open scored search here", onclick: () => openTurboSearch(c) }, "search →"),
+      ]));
+    }
+    return wrap;
+  }
+
+  function labeled(label, input) {
+    return el("label", { class: "cnf-labeled" }, [el("span", {}, label), input]);
+  }
+
+  function openTurboSearch(city) {
+    const q = [state.keyword, `${city.name}, ${city.state}`].filter(Boolean).join(" ");
+    const url = "https://www.google.com/search?q=" + encodeURIComponent(q) + "&num=30";
+    window.open(url, "_blank");
   }
 
   function renderRate() {

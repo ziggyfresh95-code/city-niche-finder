@@ -31,3 +31,7 @@ body {
 .settings { margin-top: 10px; padding-top: 10px; border-top: 1px solid #22304a; }
 .hidden { display: none; }
 .foot { font-size: 11px; color: #8ea4c9; margin-top: 12px; line-height: 1.4; }
+.section { font-size: 12px; font-weight: 600; color: #cfe0ff; margin: 12px 0 6px; padding-top: 10px; border-top: 1px solid #22304a; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.grid2 .lbl { margin-top: 0; }
+.chk { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #9fb3d6; margin-top: 8px; }

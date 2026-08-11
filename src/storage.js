@@ -13,6 +13,12 @@ const DEFAULT_SETTINGS = {
   rdThreshold: 20,
   resultCount: 30,     // how many organic results to consider
   theme: "dark",
+  // Turbo (nearby-city expansion) defaults
+  turboDistance: 25,   // radius in miles
+  turboPopMin: 0,      // minimum city population
+  turboPopMax: 150000, // maximum city population (smaller towns = less competition)
+  turboLimit: 25,      // max cities to return
+  turboSameState: false,
 };
 
 function _get(key, fallback) {

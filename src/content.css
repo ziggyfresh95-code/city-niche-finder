@@ -93,6 +93,12 @@
 #cnf-root .cnf-primary:hover { background: #175fc0; }
 #cnf-root .cnf-hint { font-size: 10px; color: #8ea4c9; }
 
+#cnf-root .cnf-turbo { display: flex; flex-direction: column; gap: 10px; padding-top: 4px; }
+#cnf-root .cnf-turbo-controls { display: flex; gap: 6px; }
+#cnf-root .cnf-labeled { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+#cnf-root .cnf-labeled span { font-size: 9px; color: #8ea4c9; text-transform: uppercase; letter-spacing: 0.3px; }
+#cnf-root .cnf-num { width: 100%; }
+
 #cnf-root .cnf-fab {
   background: #1c74e8; color: #fff; border: none; border-radius: 999px;
   width: 52px; height: 52px; font-weight: 700; font-size: 13px; cursor: pointer;

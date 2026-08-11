@@ -32,6 +32,16 @@
       <input id="rdThreshold" class="inp" type="number" min="1" />
       <label class="lbl">Organic results to scan</label>
       <input id="resultCount" class="inp" type="number" min="5" max="50" />
+
+      <div class="section">🚀 Turbo (nearby cities)</div>
+      <div class="grid2">
+        <div><label class="lbl">Radius (mi)</label><input id="turboDistance" class="inp" type="number" min="1" max="300" /></div>
+        <div><label class="lbl">Max cities</label><input id="turboLimit" class="inp" type="number" min="1" max="100" /></div>
+        <div><label class="lbl">Pop min</label><input id="turboPopMin" class="inp" type="number" min="0" /></div>
+        <div><label class="lbl">Pop max</label><input id="turboPopMax" class="inp" type="number" min="0" /></div>
+      </div>
+      <label class="chk"><input id="turboSameState" type="checkbox" /> Same state only</label>
+
       <button id="save-settings" class="primary small">Save settings</button>
     </div>
 
