@@ -1,0 +1,33 @@
+* { box-sizing: border-box; }
+body {
+  margin: 0; width: 320px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #0b1220; color: #e8ecf3;
+}
+.wrap { padding: 14px; }
+.brand { font-weight: 700; font-size: 15px; margin-bottom: 12px; }
+.lbl { display: block; font-size: 11px; color: #9fb3d6; margin: 8px 0 4px; text-transform: uppercase; letter-spacing: 0.4px; }
+.inp {
+  width: 100%; background: #0e1830; color: #e8ecf3; border: 1px solid #2a3c5c;
+  border-radius: 6px; padding: 8px; font-size: 13px;
+}
+.inp::placeholder { color: #6b7c9c; }
+.kwrow { display: flex; gap: 6px; }
+.kwrow .inp { flex: 1; }
+.hint { font-size: 11px; color: #8ea4c9; min-height: 14px; margin-top: 4px; }
+.primary {
+  width: 100%; margin-top: 12px; background: #1c74e8; color: #fff; border: none;
+  border-radius: 8px; padding: 10px; font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.primary:hover { background: #175fc0; }
+.primary.small { padding: 8px; font-size: 12px; margin-top: 8px; }
+.ghost {
+  background: #16233b; color: #cfe0ff; border: 1px solid #2a3c5c;
+  border-radius: 6px; padding: 8px; font-size: 13px; cursor: pointer;
+}
+.ghost:hover { background: #1e3054; }
+.split { display: flex; gap: 8px; margin-top: 10px; }
+.wide { flex: 1; }
+.settings { margin-top: 10px; padding-top: 10px; border-top: 1px solid #22304a; }
+.hidden { display: none; }
+.foot { font-size: 11px; color: #8ea4c9; margin-top: 12px; line-height: 1.4; }

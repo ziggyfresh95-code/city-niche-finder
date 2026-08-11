@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>City Niche Finder — Favorites</title>
+  <link rel="stylesheet" href="src/favorites.css" />
+</head>
+<body>
+  <header>
+    <div class="brand">🎯 City Niche Finder — Favorites</div>
+  </header>
+
+  <div class="toolbar">
+    <div class="tabs">
+      <button id="tab-combos" class="tab active">Rated Niches</button>
+      <button id="tab-leads" class="tab">Leads</button>
+    </div>
+    <div class="filters">
+      <input id="search" class="inp" placeholder="Search…" />
+      <select id="ratingFilter" class="inp">
+        <option value="">All ratings</option>
+        <option value="5">5 ★</option>
+        <option value="4">4 ★ +</option>
+        <option value="3">3 ★ +</option>
+        <option value="2">2 ★ +</option>
+        <option value="1">1 ★ +</option>
+      </select>
+      <select id="tagFilter" class="inp"><option value="">All tags</option></select>
+      <button id="export" class="primary">Export CSV</button>
+    </div>
+  </div>
+
+  <div id="content"></div>
+
+  <script src="src/storage.js"></script>
+  <script src="src/favorites.js"></script>
+</body>
+</html>

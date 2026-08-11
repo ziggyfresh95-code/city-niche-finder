@@ -1,0 +1,105 @@
+/* City Niche Finder sidebar — scoped under #cnf-root to avoid clobbering Google. */
+#cnf-root {
+  position: fixed;
+  top: 70px;
+  right: 12px;
+  z-index: 2147483647;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #e8ecf3;
+}
+#cnf-root * { box-sizing: border-box; }
+
+#cnf-root .cnf-panel {
+  width: 340px;
+  max-height: 85vh;
+  overflow-y: auto;
+  background: #0b1220;
+  border: 1px solid #22304a;
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  padding: 12px;
+}
+
+#cnf-root .cnf-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+#cnf-root .cnf-logo { font-weight: 700; font-size: 14px; }
+#cnf-root .cnf-header-btns { display: flex; gap: 4px; }
+#cnf-root .cnf-icon {
+  background: #16233b; color: #cfe0ff; border: 1px solid #2a3c5c;
+  border-radius: 6px; width: 26px; height: 26px; cursor: pointer; font-size: 14px;
+}
+#cnf-root .cnf-icon:hover { background: #1e3054; }
+
+#cnf-root .cnf-row { display: flex; gap: 6px; margin-bottom: 10px; }
+#cnf-root .cnf-input {
+  flex: 1; min-width: 0; background: #0e1830; color: #e8ecf3;
+  border: 1px solid #2a3c5c; border-radius: 6px; padding: 6px 8px; font-size: 12px;
+}
+#cnf-root .cnf-input::placeholder { color: #6b7c9c; }
+
+#cnf-root .cnf-scores { display: flex; gap: 6px; margin-bottom: 10px; }
+#cnf-root .cnf-pill {
+  flex: 1; border-radius: 8px; padding: 6px 4px; text-align: center;
+  display: flex; flex-direction: column; gap: 2px; border: 1px solid transparent;
+}
+#cnf-root .cnf-pill-label { font-size: 9px; opacity: 0.85; text-transform: uppercase; letter-spacing: 0.4px; }
+#cnf-root .cnf-pill-val { font-size: 15px; font-weight: 700; }
+#cnf-root .cnf-green  { background: rgba(34,197,94,0.15);  border-color: #22c55e; color: #4ade80; }
+#cnf-root .cnf-yellow { background: rgba(234,179,8,0.15);  border-color: #eab308; color: #facc15; }
+#cnf-root .cnf-red    { background: rgba(239,68,68,0.15);  border-color: #ef4444; color: #f87171; }
+#cnf-root .cnf-gray   { background: rgba(148,163,184,0.15); border-color: #64748b; color: #94a3b8; }
+
+#cnf-root .cnf-tabs { display: flex; gap: 4px; margin-bottom: 8px; }
+#cnf-root .cnf-tab {
+  flex: 1; background: #0e1830; color: #9fb3d6; border: 1px solid #22304a;
+  border-radius: 6px; padding: 6px 4px; font-size: 11px; cursor: pointer;
+}
+#cnf-root .cnf-tab-active { background: #1c74e8; color: #fff; border-color: #1c74e8; }
+
+#cnf-root .cnf-body { }
+#cnf-root .cnf-reasons { list-style: none; padding: 0; margin: 0 0 8px; }
+#cnf-root .cnf-reasons li { font-size: 11px; color: #9fb3d6; padding: 2px 0; }
+
+#cnf-root .cnf-item {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 6px; border-bottom: 1px solid #17233b;
+}
+#cnf-root .cnf-item-main { flex: 1; min-width: 0; }
+#cnf-root .cnf-item-name { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#cnf-root .cnf-item-meta { font-size: 10px; color: #8ea4c9; margin-top: 2px; }
+#cnf-root .cnf-tag {
+  font-size: 9px; background: #24314c; color: #b9c8e6; padding: 2px 5px;
+  border-radius: 4px; white-space: nowrap;
+}
+#cnf-root .cnf-tag.cnf-good { background: rgba(34,197,94,0.2); color: #4ade80; }
+#cnf-root .cnf-save {
+  background: #16233b; color: #cfe0ff; border: 1px solid #2a3c5c;
+  border-radius: 6px; padding: 4px 6px; font-size: 10px; cursor: pointer; white-space: nowrap;
+}
+#cnf-root .cnf-save:hover { background: #1e3054; }
+#cnf-root .cnf-empty { font-size: 12px; color: #8ea4c9; padding: 10px 4px; }
+
+#cnf-root .cnf-rate { display: flex; flex-direction: column; gap: 10px; padding-top: 4px; }
+#cnf-root .cnf-rate-title { font-size: 12px; color: #cfe0ff; }
+#cnf-root .cnf-stars { display: flex; gap: 4px; font-size: 24px; }
+#cnf-root .cnf-star { color: #33456b; cursor: pointer; line-height: 1; }
+#cnf-root .cnf-star-on { color: #facc15; }
+#cnf-root .cnf-primary {
+  background: #1c74e8; color: #fff; border: none; border-radius: 8px;
+  padding: 9px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+#cnf-root .cnf-primary:hover { background: #175fc0; }
+#cnf-root .cnf-hint { font-size: 10px; color: #8ea4c9; }
+
+#cnf-root .cnf-fab {
+  background: #1c74e8; color: #fff; border: none; border-radius: 999px;
+  width: 52px; height: 52px; font-weight: 700; font-size: 13px; cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+
+#cnf-root .cnf-toast {
+  position: fixed; bottom: 20px; right: 20px; background: #1c74e8; color: #fff;
+  padding: 10px 14px; border-radius: 8px; font-size: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
