@@ -114,6 +114,19 @@ section("parser: local pack with star glyphs + phones");
   ok(mp.every((l) => l.locationMatch), "all rows match the city");
 }
 
+// ---- parser: no local pack, but organic + ads have review snippets ----
+section("parser: no local pack (organic/ads present)");
+{
+  const doc = loadFixture("no_localpack_ads.html");
+  const mp = parser.parseMapPack("Midlothian, TX", doc);
+  eq(mp.length, 0, "no 'Businesses' heading -> no map pack (organic/ads ignored)");
+  const mpScore = scoring.scoreMapPack(mp);
+  eq(mpScore.score, 100, "no local competition -> wide-open opportunity");
+  // Organic still parses (the real competition lives here).
+  const org = parser.parseOrganic("asbestos", "Midlothian, TX", 30, doc);
+  ok(org.length >= 2, "organic results still parsed");
+}
+
 // ---- parser: no map pack ----
 section("parser: no map pack");
 {

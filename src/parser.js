@@ -96,16 +96,38 @@ function isBefore(a, b) {
 // ---- map pack -------------------------------------------------------------
 
 // Review-count token: a parenthesized number NOT followed by more digits/dash
-// (so phone numbers like "(830) 293-4750" are excluded). This is the anchor for
-// detecting a local row — decoupled from the rating, which Google renders in a
-// separate element with star glyphs in between.
-const REVIEW_RE = /\((\d[\d,]{0,6})\)(?!\s*[-\d])/;
+// (so phone numbers like "(830) 293-4750" are excluded).
+const REVIEW_RE = /\(\s*(\d[\d,]{0,6})\s*\)(?!\s*[-\d])/;
 // Rating: a standalone decimal 0.0–5.0 (won't match "24 hours" or "3+ years").
 const RATING_RE = /(?:^|[^\d.])([0-5]\.\d)(?![\d.])/;
 
-// A local row must carry a business name — the first line with letters that
-// isn't the rating/review line or obvious metadata (hours, "years in business",
-// the section label, or action buttons). Careful not to reject real names that
+// Direct text of an element (its own text nodes only), trimmed.
+function ownText(el) {
+  let s = "";
+  for (const n of el.childNodes) if (n.nodeType === 3) s += n.nodeValue;
+  return s.trim();
+}
+
+// The local pack ("Businesses" / "Places") always has a section heading. Find
+// it — its presence is what tells us a local pack exists at all. No heading =
+// no local competition (which is itself a strong opportunity signal).
+function findLocalHeading(scope) {
+  const HEAD = /^(businesses|places|local results|more places)$/i;
+  const els = scope.querySelectorAll("h1,h2,h3,h4,[role='heading'],div,span");
+  for (const e of els) if (HEAD.test(ownText(e))) return e;
+  return null;
+}
+
+// Organic results and ads carry review snippets too — exclude them so only the
+// true local pack is measured. These class/attribute markers are stable-ish
+// Google containers for organic blocks and ad units.
+function isOrganicOrAd(el) {
+  return !!(el.closest &&
+    el.closest(".g, .MjjYud, .tF2Cxc, .Tw0YHf, [data-text-ad], [data-pcu], .uEierd, .commercial-unit-desktop-top, .cUnQKe"));
+}
+
+// A local row must carry a business name — a line with letters that isn't the
+// rating/review line or obvious metadata. Careful not to reject real names that
 // merely start with "Open" (e.g. "Open Road Towing") or contain "Hour".
 function isMetaLine(l) {
   return REVIEW_RE.test(l) ||
@@ -119,61 +141,75 @@ function nameLine(txt) {
   ) || null;
 }
 
+// Rating + review count for a row, trying visible text then aria-labels (Google
+// stores "4.9 star rating 31 reviews" in aria-label on many local widgets).
+function reviewData(el, txt) {
+  let reviews = null, rating = null;
+  const tok = txt.match(REVIEW_RE);
+  if (tok) reviews = parseInt(tok[1].replace(/,/g, ""), 10);
+  const rat = txt.match(RATING_RE);
+  if (rat) rating = parseFloat(rat[1]);
+
+  if (reviews == null || rating == null) {
+    const ariaEl = el.querySelector('[aria-label*="review" i], [aria-label*="star" i]');
+    const aria = (ariaEl && ariaEl.getAttribute("aria-label")) || "";
+    if (reviews == null) {
+      const a = aria.match(/(\d[\d,]{0,6})\s*reviews?/i);
+      if (a) reviews = parseInt(a[1].replace(/,/g, ""), 10);
+    }
+    if (rating == null) {
+      const r = aria.match(/(\d(?:\.\d)?)\s*star/i);
+      if (r) rating = parseFloat(r[1]);
+    }
+  }
+  if (reviews == null) {
+    const a = txt.match(/(\d[\d,]{0,6})\s+reviews?/i);
+    if (a) reviews = parseInt(a[1].replace(/,/g, ""), 10);
+  }
+  return { reviews, rating };
+}
+
 // Parse the local "Map Pack" / "Businesses" block (top-3 style local results).
 function parseMapPack(location, doc = document) {
-  // Scan the main center column so we catch the local pack wherever Google puts
-  // it, but skip the right-hand map panel (which repeats business names).
-  const root = doc.querySelector("#center_col") || doc.querySelector("#rso") ||
+  const scope = doc.querySelector("#center_col") || doc.querySelector("#rso") ||
     doc.querySelector("#search") || doc.body;
-  if (!root) return [];
+  if (!scope) return [];
+
+  // No local-pack heading => no local pack on this SERP.
+  const heading = findLocalHeading(scope);
+  if (!heading) return [];
 
   const candidates = [];
-  const walker = doc.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
+  const walker = doc.createTreeWalker(scope, NodeFilter.SHOW_ELEMENT);
   let node;
   while ((node = walker.nextNode())) {
     if (candidates.length >= 12) break;
+    if (!isBefore(heading, node)) continue;  // rows sit after the heading
+    if (isOrganicOrAd(node)) continue;       // never count organic/ads
     const txt = elText(node);
-    if (!txt || txt.length > 400) continue;   // too big to be a single row
-    if (!REVIEW_RE.test(txt)) continue;       // must have a review-count token
-    const named = !!nameLine(txt);
-    // Collapse nested matches toward the smallest element that STILL has a name
-    // (so we don't shrink a listing down to its bare rating badge).
-    const ancestorIdx = candidates.findIndex((c) => c.contains(node));
-    if (ancestorIdx >= 0) { if (named) candidates[ancestorIdx] = node; continue; }
-    if (candidates.some((c) => node.contains(c))) continue; // coarser than existing
-    if (named) candidates.push(node);
+    if (!txt || txt.length > 400) continue;  // too big to be a single row
+    const rd = reviewData(node, txt);
+    if (rd.reviews == null && rd.rating == null) continue; // needs a review signal
+    const name = nameLine(txt);
+    if (!name) continue;
+    // Collapse nested matches toward the smallest element that still has a name.
+    const idx = candidates.findIndex((c) => c.el.contains(node));
+    if (idx >= 0) { candidates[idx] = { el: node, txt, rd, name }; continue; }
+    if (candidates.some((c) => node.contains(c.el))) continue;
+    candidates.push({ el: node, txt, rd, name });
   }
 
-  // Prefer rows that sit above the first organic result (the true local pack).
-  // If that filter empties the set — e.g. Google marks local names with <h3>
-  // too — fall back to all rating-bearing rows. Cap to a sane local-pack size.
-  const cutoff = firstOrganicAnchor(doc);
-  let rows = candidates;
-  if (cutoff) {
-    const before = candidates.filter((el) => isBefore(el, cutoff));
-    if (before.length) rows = before;
-  }
-  rows = rows.slice(0, 6);
-
-  return rows.map((el) => {
-    const txt = elText(el);
-    const rev = txt.match(REVIEW_RE);
-    const reviews = rev ? parseInt(rev[1].replace(/,/g, ""), 10) : null;
-    const rat = txt.match(RATING_RE);
-    const rating = rat ? parseFloat(rat[1]) : null;
-    const name = nameLine(txt) || "Unknown";
-    const lower = txt.toLowerCase();
-    const hasWebsite = /\bwebsite\b/.test(lower) ||
-      !!el.querySelector('a[href^="http"]:not([href*="google."])');
-    const phone = (txt.match(/\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/) || [null])[0];
-    return {
-      name, rating, reviews, phone, hasWebsite,
-      // Match on the whole row (address), not the name — businesses rarely put
-      // the city in their name, but their listed address is the real signal of
-      // whether they're actually in the target city.
-      locationMatch: matchesLocation(txt, location),
-    };
-  });
+  return candidates.slice(0, 6).map((c) => ({
+    name: c.name,
+    rating: c.rd.rating,
+    reviews: c.rd.reviews,
+    phone: (c.txt.match(/\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/) || [null])[0],
+    hasWebsite: /\bwebsite\b/i.test(c.txt) ||
+      !!c.el.querySelector('a[href^="http"]:not([href*="google."])'),
+    // Match on the row's address text, not the name — the real signal of
+    // whether the business is actually in the target city.
+    locationMatch: matchesLocation(c.txt, location),
+  }));
 }
 
 // ---- organic results ------------------------------------------------------

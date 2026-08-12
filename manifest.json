@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "City Niche Finder",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "description": "Score local niche/city competition off Google's Map Pack + organic results, save leads, rate niches, and export to CSV.",
   "permissions": ["storage", "tabs"],
   "host_permissions": ["https://www.google.com/*", "https://www.google.co.uk/*"],
