@@ -108,9 +108,10 @@ src/
 ## Known limitations & roadmap
 
 - **Google's HTML changes often.** Parsing uses resilient text/structure
-  heuristics (in `src/parser.js`) rather than brittle class names, but if Google
-  reshuffles their markup and detection degrades, the sidebar still works — you can
-  rate and save manually — and only `src/parser.js` needs updating.
+  heuristics and **DOM order** (in `src/parser.js`) rather than brittle class names
+  or layout coordinates, and it's covered by a test suite (see below). If Google
+  reshuffles their markup and detection still degrades, the sidebar keeps working —
+  you can rate and save manually — and only `src/parser.js` needs updating.
 - **Turbo dataset floor is ~15,000 population.** The bundled `src/cities.js` comes
   from GeoNames' cities-15000 set (3,400+ US cities). That covers every metro and
   its significant suburbs, but not sub-15k small towns. To include smaller towns,
@@ -118,6 +119,22 @@ src/
   `[name, state, lat, lng, population]` row format — the Turbo code doesn't change.
 - **RD data** currently comes from the Ahrefs SEO Toolbar if you have it. Direct
   integration would need an Ahrefs API key.
+
+## Development & tests
+
+The scoring, parsing, Turbo, and UULE logic is unit-tested with a small
+jsdom-based harness (synthetic-but-representative Google SERP fixtures in
+`test/fixtures/`):
+
+```
+npm install   # dev-only: jsdom
+npm test
+```
+
+The parser functions accept an injectable `document`, so tests run them against
+saved fixtures. When Google changes their markup, capture a fresh result page,
+drop it in `test/fixtures/`, and adjust selectors in `src/parser.js` until the
+suite is green again.
 
 ## Data & attribution
 

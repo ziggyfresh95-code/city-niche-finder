@@ -16,8 +16,8 @@ const DEFAULT_SETTINGS = {
   geoSpoof: true,      // spoof search location via UULE for accurate local results
   // Turbo (nearby-city expansion) defaults
   turboDistance: 25,   // radius in miles
-  turboPopMin: 50000,  // minimum city population (sweet spot 50k-100k)
-  turboPopMax: 100000, // maximum city population (sweet spot 50k-100k)
+  turboPopMin: 50000,  // minimum city population (sweet spot 50k-500k)
+  turboPopMax: 500000, // maximum city population (sweet spot 50k-500k)
   turboLimit: 25,      // max cities to return
   turboSameState: false,
 };

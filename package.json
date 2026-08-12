@@ -1,0 +1,12 @@
+{
+  "name": "city-niche-finder",
+  "version": "1.2.0",
+  "private": true,
+  "description": "Chrome extension for local rank-and-rent niche/city due diligence.",
+  "scripts": {
+    "test": "node test/run.js"
+  },
+  "devDependencies": {
+    "jsdom": "^24.1.0"
+  }
+}
