@@ -13,6 +13,7 @@ const DEFAULT_SETTINGS = {
   rdThreshold: 20,
   resultCount: 30,     // how many organic results to consider
   theme: "dark",
+  geoSpoof: true,      // spoof search location via UULE for accurate local results
   // Turbo (nearby-city expansion) defaults
   turboDistance: 25,   // radius in miles
   turboPopMin: 50000,  // minimum city population (sweet spot 50k-100k)

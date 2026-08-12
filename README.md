@@ -20,6 +20,10 @@ Built for my own workflow after studying how a paid tool (Niche Finder Pro) work
 - **Search launcher + random niche suggester** — from the toolbar popup, type a
   keyword and city (or hit 🎲 for a random niche from 90+ across 10 categories)
   and it opens a scored Google search.
+- **Location spoofing (UULE)** — searches run *as if you were in the target city*,
+  so the Map Pack and scores reflect that market instead of wherever you actually
+  are. On by default; toggle it in the popup. Turbo searches inherit it, so every
+  nearby-city search is accurate too. A 📍 shows in the sidebar when active.
 - **Turbo nearby-city expansion** — expand one city into nearby cities filtered by
   radius (up to 300 mi) and population range, ranked by distance. Each result
   opens a fresh scored search — batch-analyze a whole region. Uses a bundled
@@ -92,6 +96,7 @@ src/
   parser.js            # Google SERP parsing (map pack + organic)
   cities.js            # bundled US cities dataset (GeoNames, offline)
   turbo.js             # nearby-city expansion (Haversine + lookup)
+  uule.js              # location spoofing (UULE) + search-URL builder
   storage.js           # chrome.storage helpers + CSV builder
   content.js           # injects & renders the sidebar
   content.css          # sidebar styles

@@ -25,6 +25,7 @@
   margin-bottom: 10px;
 }
 #cnf-root .cnf-logo { font-weight: 700; font-size: 14px; }
+#cnf-root .cnf-geo { margin-left: 5px; font-size: 12px; }
 #cnf-root .cnf-header-btns { display: flex; gap: 4px; }
 #cnf-root .cnf-icon {
   background: #16233b; color: #cfe0ff; border: 1px solid #2a3c5c;

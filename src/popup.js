@@ -3,13 +3,15 @@
 
 const $ = (id) => document.getElementById(id);
 
-function buildSearchUrl(keyword, location) {
-  const q = [keyword, location].filter(Boolean).join(" ").trim();
-  return "https://www.google.com/search?q=" + encodeURIComponent(q) + "&num=30";
+// Parse a "City, ST" string into { city, state } for UULE.
+function parseLoc(raw) {
+  const [c, st] = (raw || "").split(",");
+  return { city: (c || "").trim(), state: (st || "").trim().slice(0, 2).toUpperCase() };
 }
 
 async function init() {
   const s = await getSettings();
+  $("geoSpoof").checked = !!s.geoSpoof;
   $("reviewThreshold").value = s.reviewThreshold;
   $("rdThreshold").value = s.rdThreshold;
   $("resultCount").value = s.resultCount;
@@ -26,10 +28,16 @@ async function init() {
   });
 
   $("search").addEventListener("click", () => {
-    const url = buildSearchUrl($("keyword").value.trim(), $("location").value.trim());
+    const url = buildSearchUrl(
+      $("keyword").value.trim(),
+      parseLoc($("location").value.trim()),
+      $("geoSpoof").checked
+    );
     chrome.tabs.create({ url });
     window.close();
   });
+
+  $("geoSpoof").addEventListener("change", () => saveSettings({ geoSpoof: $("geoSpoof").checked }));
 
   $("keyword").addEventListener("keydown", (e) => { if (e.key === "Enter") $("search").click(); });
   $("location").addEventListener("keydown", (e) => { if (e.key === "Enter") $("search").click(); });

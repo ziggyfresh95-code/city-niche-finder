@@ -84,8 +84,12 @@
     const panel = el("div", { class: "cnf-panel" });
 
     // Header
+    const spoofed = new URLSearchParams(location.search).has("uule");
     panel.appendChild(el("div", { class: "cnf-header" }, [
-      el("div", { class: "cnf-logo" }, "🎯 City Niche Finder"),
+      el("div", { class: "cnf-logo" }, [
+        "🎯 City Niche Finder",
+        spoofed ? el("span", { class: "cnf-geo", title: "Results geo-spoofed to the target city (UULE)" }, "📍") : null,
+      ]),
       el("div", { class: "cnf-header-btns" }, [
         el("button", { class: "cnf-icon", title: "Rescan page", onclick: scan }, "⟳"),
         el("button", { class: "cnf-icon", title: "Favorites", onclick: () => chrome.runtime.sendMessage({ type: "open-favorites" }) }, "★"),
@@ -244,8 +248,11 @@
   }
 
   function openTurboSearch(city) {
-    const q = [state.keyword, `${city.name}, ${city.state}`].filter(Boolean).join(" ");
-    const url = "https://www.google.com/search?q=" + encodeURIComponent(q) + "&num=30";
+    const url = buildSearchUrl(
+      state.keyword,
+      { city: city.name, state: city.state },
+      state.settings.geoSpoof
+    );
     window.open(url, "_blank");
   }
 
