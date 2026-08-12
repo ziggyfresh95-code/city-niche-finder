@@ -90,7 +90,7 @@ function leadTable(rows) {
   return `<table>
     <thead><tr>
       <th>Name</th><th>Keyword</th><th>Location</th><th>Phone</th>
-      <th>Website</th><th>Reviews</th><th>Date</th><th></th>
+      <th>Website</th><th>Reviews</th><th>Tags</th><th>Date</th><th></th>
     </tr></thead>
     <tbody>${rows.map((f) => `<tr>
       <td>${esc(f.name)}</td>
@@ -99,6 +99,7 @@ function leadTable(rows) {
       <td>${esc(f.phone)}</td>
       <td>${f.url ? `<a href="${esc(f.url)}" target="_blank">link</a>` : (f.hasWebsite === "no" ? '<span class="chip good">no site</span>' : "")}</td>
       <td>${esc(f.reviews)}</td>
+      <td>${(f.tags || []).map((t) => `<span class="chip">${esc(t)}</span>`).join(" ")}</td>
       <td class="muted">${(f.date || "").slice(0, 10)}</td>
       <td><button class="del" data-del="${esc(f.id)}">✕</button></td>
     </tr>`).join("")}</tbody>
@@ -138,6 +139,7 @@ function doExport() {
       { label: "Has Website", get: (r) => r.hasWebsite },
       { label: "Reviews", get: (r) => r.reviews },
       { label: "Rating", get: (r) => r.rating },
+      { label: "Tags", get: (r) => (r.tags || []).join("; ") },
       { label: "Date", get: (r) => (r.date || "").slice(0, 10) },
     ];
   }

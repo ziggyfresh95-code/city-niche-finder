@@ -20,6 +20,7 @@ async function init() {
   $("turboPopMin").value = s.turboPopMin;
   $("turboPopMax").value = s.turboPopMax;
   $("turboSameState").checked = !!s.turboSameState;
+  $("autoCollectNoWebsite").checked = !!s.autoCollectNoWebsite;
 
   $("random").addEventListener("click", () => {
     const { niche, category } = randomNiche();
@@ -60,6 +61,7 @@ async function init() {
       turboPopMin: parseInt($("turboPopMin").value, 10) || 50000,
       turboPopMax: parseInt($("turboPopMax").value, 10) || 500000,
       turboSameState: $("turboSameState").checked,
+      autoCollectNoWebsite: $("autoCollectNoWebsite").checked,
     });
     $("save-settings").textContent = "Saved ✓";
     setTimeout(() => ($("save-settings").textContent = "Save settings"), 1200);

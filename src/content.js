@@ -41,6 +41,14 @@
     state.domainScore = scoreDomains(state.organic, th);
     state.overall = overallScore(state.mapPackScore, state.domainScore);
     render();
+
+    if (state.settings.autoCollectNoWebsite) {
+      const noSite = state.mapPack.filter((l) => !l.hasWebsite);
+      if (noSite.length > 0) {
+        await collectNoWebsite(noSite, true);
+        toast(`Auto-collected ${noSite.length} no-website lead${noSite.length > 1 ? "s" : ""}`);
+      }
+    }
   }
 
   // ---- rendering ----------------------------------------------------------
@@ -148,6 +156,14 @@
     if (state.mapPack.length === 0) {
       wrap.appendChild(el("div", { class: "cnf-empty" }, "No Map Pack rows detected. Scroll the page or rescan."));
       return wrap;
+    }
+    const noSite = state.mapPack.filter((l) => !l.hasWebsite);
+    if (noSite.length > 0) {
+      wrap.appendChild(el("button", {
+        class: "cnf-collect",
+        title: "Save every no-website listing as a lead, tagged no-website",
+        onclick: () => collectNoWebsite(noSite),
+      }, `＋ Collect ${noSite.length} no-website lead${noSite.length > 1 ? "s" : ""}`));
     }
     for (const l of state.mapPack) {
       const badge = l.hasWebsite ? el("span", { class: "cnf-tag" }, "has site") : el("span", { class: "cnf-tag cnf-good" }, "NO WEBSITE");
@@ -291,7 +307,7 @@
     render();
   }
 
-  async function saveLead(l) {
+  async function saveLead(l, tags) {
     await upsertFavorite({
       type: "listing",
       keyword: state.keyword,
@@ -302,8 +318,28 @@
       reviews: l.reviews != null ? l.reviews : "",
       rating: l.rating != null ? l.rating : "",
       hasWebsite: l.hasWebsite ? "yes" : "no",
+      tags: tags || [],
     });
     toast(`Saved lead: ${l.name}`);
+  }
+
+  // Bulk-save every no-website Map Pack listing as a cold-call lead.
+  async function collectNoWebsite(listings, silent) {
+    for (const l of listings) {
+      await upsertFavorite({
+        type: "listing",
+        keyword: state.keyword,
+        location: state.location,
+        name: l.name,
+        phone: l.phone || "",
+        url: "",
+        reviews: l.reviews != null ? l.reviews : "",
+        rating: l.rating != null ? l.rating : "",
+        hasWebsite: "no",
+        tags: ["no-website"],
+      });
+    }
+    if (!silent) toast(`Collected ${listings.length} no-website lead${listings.length > 1 ? "s" : ""} ★`);
   }
 
   async function saveCombo() {
