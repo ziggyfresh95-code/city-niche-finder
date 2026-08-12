@@ -27,9 +27,20 @@
     return params.get("q") || "";
   }
 
+  function batchInfo() {
+    const p = new URLSearchParams(location.search);
+    const batchId = p.get("cnf_batch");
+    if (!batchId) return null;
+    return { batchId, keyword: p.get("cnf_kw") || "", location: p.get("cnf_loc") || "" };
+  }
+
   async function scan() {
     state.settings = await getSettings();
+    const batch = batchInfo();
     const parsed = splitQuery(getQueryParam());
+    // A batch tab carries the exact keyword/location, so prefer those.
+    if (batch && batch.keyword) state.keyword = batch.keyword;
+    if (batch && batch.location) state.location = batch.location;
     if (!state.keyword) state.keyword = parsed.keyword;
     if (!state.location) state.location = parsed.location;
 
@@ -44,10 +55,25 @@
 
     if (state.settings.autoCollectNoWebsite) {
       const noSite = state.mapPack.filter((l) => !l.hasWebsite);
-      if (noSite.length > 0) {
-        await collectNoWebsite(noSite, true);
-        toast(`Auto-collected ${noSite.length} no-website lead${noSite.length > 1 ? "s" : ""}`);
-      }
+      if (noSite.length > 0) await collectNoWebsite(noSite, true);
+    }
+
+    // Batch mode: auto-save this city's scored combo, then tell the background
+    // worker we're done so it can close this tab and open the next.
+    if (batch) {
+      await upsertFavorite({
+        type: "combo",
+        keyword: state.keyword,
+        location: state.location,
+        stars: 0,
+        tags: ["turbo-batch"],
+        overallScore: state.overall ? state.overall.score : "",
+        mapPackScore: state.mapPackScore ? state.mapPackScore.score : "",
+        domainScore: state.domainScore ? state.domainScore.score : "",
+        mapPackCount: state.mapPack.length,
+        dedicatedCount: state.organic.filter((r) => r.isDedicated).length,
+      });
+      chrome.runtime.sendMessage({ type: "turbo-batch-done", batchId: batch.batchId });
     }
   }
 
@@ -247,6 +273,15 @@
       wrap.appendChild(el("div", { class: "cnf-empty" }, "No cities in range. Increase the radius or population max."));
       return wrap;
     }
+    if (state.keyword) {
+      wrap.appendChild(el("button", {
+        class: "cnf-collect",
+        title: "Auto-score every city in the background and open a ranked report",
+        onclick: () => runBatch(),
+      }, `🔬 Batch-scan all ${state.turboCities.length} cities`));
+    } else {
+      wrap.appendChild(el("div", { class: "cnf-hint" }, "Set a keyword above to enable batch scanning."));
+    }
     for (const c of state.turboCities) {
       wrap.appendChild(el("div", { class: "cnf-item" }, [
         el("div", { class: "cnf-item-main" }, [
@@ -270,6 +305,18 @@
       state.settings.geoSpoof
     );
     window.open(url, "_blank");
+  }
+
+  function runBatch() {
+    const urls = state.turboCities.map((c) => {
+      const base = buildSearchUrl(state.keyword, { city: c.name, state: c.state }, state.settings.geoSpoof);
+      const sep = base.includes("?") ? "&" : "?";
+      return base + sep +
+        "cnf_kw=" + encodeURIComponent(state.keyword) +
+        "&cnf_loc=" + encodeURIComponent(`${c.name}, ${c.state}`);
+    });
+    chrome.runtime.sendMessage({ type: "turbo-batch-start", urls });
+    toast(`Batch-scanning ${urls.length} cities… a report opens when done`);
   }
 
   function renderRate() {

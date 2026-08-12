@@ -17,6 +17,14 @@ function currentRows() {
   const minRating = parseInt($("ratingFilter").value, 10) || 0;
   const tag = $("tagFilter").value;
 
+  const sortKey = $("sort").value;
+  const num = (v) => (v === "" || v == null ? -1 : Number(v));
+  const sorters = {
+    date: (a, b) => new Date(b.date) - new Date(a.date),
+    score: (a, b) => num(b.overallScore) - num(a.overallScore),
+    rating: (a, b) => (b.stars || 0) - (a.stars || 0),
+  };
+
   return all
     .filter((f) => f.type === type)
     .filter((f) => {
@@ -26,7 +34,7 @@ function currentRows() {
     })
     .filter((f) => (view === "combos" ? (f.stars || 0) >= minRating : true))
     .filter((f) => (tag ? (f.tags || []).includes(tag) : true))
-    .sort((a, b) => new Date(b.date) - new Date(a.date));
+    .sort(sorters[sortKey] || sorters.date);
 }
 
 function populateTagFilter() {
@@ -158,6 +166,22 @@ $("tab-leads").addEventListener("click", () => { view = "leads"; render(); });
 $("search").addEventListener("input", render);
 $("ratingFilter").addEventListener("change", render);
 $("tagFilter").addEventListener("change", render);
+$("sort").addEventListener("change", render);
 $("export").addEventListener("click", doExport);
 
-load();
+// Deep link from a Turbo batch: show the combos tagged "turbo-batch", ranked by
+// score, so the batch reads as a regional comparison report.
+async function boot() {
+  await load();
+  const report = new URLSearchParams(location.search).get("report");
+  if (report === "turbo-batch") {
+    view = "combos";
+    if ([...$("tagFilter").options].some((o) => o.value === "turbo-batch")) {
+      $("tagFilter").value = "turbo-batch";
+    }
+    $("sort").value = "score";
+    render();
+  }
+}
+
+boot();

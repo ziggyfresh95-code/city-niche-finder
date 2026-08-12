@@ -26,8 +26,14 @@ Built for my own workflow after studying how a paid tool (Niche Finder Pro) work
   nearby-city search is accurate too. A 📍 shows in the sidebar when active.
 - **Turbo nearby-city expansion** — expand one city into nearby cities filtered by
   radius (up to 300 mi) and population range, ranked by distance. Each result
-  opens a fresh scored search — batch-analyze a whole region. Uses a bundled
-  offline US cities dataset (no network calls).
+  opens a fresh scored search. Uses a bundled offline US cities dataset (no
+  network calls).
+- **Batch Turbo report** — one click scores *every* nearby city in the background
+  (throttled inactive tabs), then opens the Favorites page as a ranked
+  regional comparison (sorted by score) you can filter and export.
+- **Auto-collect no-website leads** — one click saves every website-less Map Pack
+  listing (name + phone) as a `no-website` lead for cold-calling; or turn on
+  hands-free auto-collect in settings.
 - **Save leads** — one click saves any Map Pack or organic listing (name, phone,
   website / no-website flag, reviews) as a prospect.
 - **Rate & tag niches** — give each keyword+city combo a 5-star rating and custom
@@ -58,8 +64,10 @@ Built for my own workflow after studying how a paid tool (Niche Finder Pro) work
    - **Rate & Save tab** — give the combo a star rating + tags and save it.
    - **🚀 Turbo tab** — set a radius and population range, hit **Find nearby
      cities**, and get a distance-ranked list of nearby towns. Click **search →**
-     on any of them to open a fresh scored search for that city.
-3. Click **＋lead** on any listing to save it as a prospect.
+     on any of them to open a fresh scored search, or **🔬 Batch-scan all cities**
+     to score the whole region automatically and open a ranked report.
+3. Click **＋lead** on any listing, or **＋ Collect N no-website leads** in the Map
+   Pack tab to grab every website-less business at once.
 4. Click the ★ button (top of the sidebar, or in the popup) to open the
    **Favorites** page, filter/sort, and **Export CSV**.
 
