@@ -94,6 +94,26 @@ section("parser: opportunity market");
   ok(overall.score >= 70, `overall opportunity is green (${overall.score})`);
 }
 
+// ---- parser: real local pack (stars between rating & reviews, phones) ----
+section("parser: local pack with star glyphs + phones");
+{
+  const doc = loadFixture("local_stars_phones.html");
+  const mp = parser.parseMapPack("Midlothian, TX", doc);
+  eq(mp.length, 3, "3 local listings detected despite star glyphs");
+  const names = mp.map((l) => l.name);
+  ok(names.includes("Open Road Towing"), "name parsed (not '5.0' or 'Businesses')");
+  const dw = mp.find((l) => /D&W/.test(l.name));
+  ok(dw, "D&W row detected");
+  eq(dw.reviews, 85, "review count parsed across the star gap");
+  eq(dw.rating, 4.5, "rating parsed");
+  eq(dw.hasWebsite, false, "D&W flagged no-website (only Directions)");
+  const open = mp.find((l) => l.name === "Open Road Towing");
+  eq(open.reviews, 2, "small review count parsed");
+  ok(open.phone && open.phone.includes("293-4750"), "phone parsed, not mistaken for reviews");
+  ok(mp.every((l) => l.reviews < 1000), "phone numbers never parsed as review counts");
+  ok(mp.every((l) => l.locationMatch), "all rows match the city");
+}
+
 // ---- parser: no map pack ----
 section("parser: no map pack");
 {

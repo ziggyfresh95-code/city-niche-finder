@@ -95,7 +95,11 @@ function isBefore(a, b) {
 
 // ---- map pack -------------------------------------------------------------
 
-const RATING_RE = /(\d(?:\.\d)?)\s*\(\s*([\d,]+)\s*\)/;
+// Rating + review-count, e.g. "5.0 ★★★★★ (2)" or "4.5(85)". The gap tolerates
+// star glyphs/spaces between the rating and the "(count)". The trailing
+// negative lookahead rejects phone numbers like "(830) 293-4750" — a real
+// review count is never immediately followed by more digits.
+const RATING_RE = /([0-5](?:\.\d)?)[^()\d\n]{0,14}\((\d[\d,]*)\)(?!\s*[-\d])/;
 
 // A map-pack row must carry a business name, not just a rating — i.e. at least
 // one non-empty line that isn't the rating line.
@@ -103,21 +107,22 @@ function hasName(txt) {
   return txt.split("\n").some((l) => l.trim().length > 1 && !RATING_RE.test(l.trim()));
 }
 
-// Parse the local "Map Pack" (top-3 style local results).
+// Parse the local "Map Pack" / "Businesses" block (top-3 style local results).
 function parseMapPack(location, doc = document) {
-  const root = doc.querySelector("#rso") || doc.body;
+  // Scan the main center column so we catch the local pack wherever Google puts
+  // it, but skip the right-hand map panel (which repeats business names).
+  const root = doc.querySelector("#center_col") || doc.querySelector("#rso") ||
+    doc.querySelector("#search") || doc.body;
   if (!root) return [];
-  const cutoff = firstOrganicAnchor(doc); // local pack sits before organic
 
   const candidates = [];
   const walker = doc.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
   let node;
   while ((node = walker.nextNode())) {
-    if (candidates.length >= 8) break;
+    if (candidates.length >= 12) break;
     const txt = elText(node);
     if (!txt || txt.length > 400) continue;   // too big to be a single row
     if (!RATING_RE.test(txt)) continue;
-    if (cutoff && !isBefore(node, cutoff)) continue; // must precede organic
     const named = hasName(txt);
     // Collapse nested matches toward the smallest element that STILL has a name
     // (so we don't shrink a listing down to its bare rating badge).
@@ -127,7 +132,18 @@ function parseMapPack(location, doc = document) {
     if (named) candidates.push(node);
   }
 
-  return candidates.map((el) => {
+  // Prefer rows that sit above the first organic result (the true local pack).
+  // If that filter empties the set — e.g. Google marks local names with <h3>
+  // too — fall back to all rating-bearing rows. Cap to a sane local-pack size.
+  const cutoff = firstOrganicAnchor(doc);
+  let rows = candidates;
+  if (cutoff) {
+    const before = candidates.filter((el) => isBefore(el, cutoff));
+    if (before.length) rows = before;
+  }
+  rows = rows.slice(0, 6);
+
+  return rows.map((el) => {
     const txt = elText(el);
     const m = txt.match(RATING_RE);
     const rating = m ? parseFloat(m[1]) : null;
@@ -140,7 +156,10 @@ function parseMapPack(location, doc = document) {
     const phone = (txt.match(/\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/) || [null])[0];
     return {
       name, rating, reviews, phone, hasWebsite,
-      locationMatch: matchesLocation(name, location),
+      // Match on the whole row (address), not the name — businesses rarely put
+      // the city in their name, but their listed address is the real signal of
+      // whether they're actually in the target city.
+      locationMatch: matchesLocation(txt, location),
     };
   });
 }
