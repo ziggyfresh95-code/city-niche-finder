@@ -49,8 +49,8 @@ async function init() {
       resultCount: parseInt($("resultCount").value, 10) || 30,
       turboDistance: parseInt($("turboDistance").value, 10) || 25,
       turboLimit: parseInt($("turboLimit").value, 10) || 25,
-      turboPopMin: parseInt($("turboPopMin").value, 10) || 0,
-      turboPopMax: parseInt($("turboPopMax").value, 10) || 150000,
+      turboPopMin: parseInt($("turboPopMin").value, 10) || 50000,
+      turboPopMax: parseInt($("turboPopMax").value, 10) || 100000,
       turboSameState: $("turboSameState").checked,
     });
     $("save-settings").textContent = "Saved ✓";

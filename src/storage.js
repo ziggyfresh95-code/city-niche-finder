@@ -15,8 +15,8 @@ const DEFAULT_SETTINGS = {
   theme: "dark",
   // Turbo (nearby-city expansion) defaults
   turboDistance: 25,   // radius in miles
-  turboPopMin: 0,      // minimum city population
-  turboPopMax: 150000, // maximum city population (smaller towns = less competition)
+  turboPopMin: 50000,  // minimum city population (sweet spot 50k-100k)
+  turboPopMax: 100000, // maximum city population (sweet spot 50k-100k)
   turboLimit: 25,      // max cities to return
   turboSameState: false,
 };
