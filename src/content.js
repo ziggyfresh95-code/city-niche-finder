@@ -119,13 +119,16 @@
 
     // Header
     const spoofed = new URLSearchParams(location.search).has("uule");
+    const version = (chrome.runtime.getManifest && chrome.runtime.getManifest().version) || "?";
     panel.appendChild(el("div", { class: "cnf-header" }, [
       el("div", { class: "cnf-logo" }, [
         "🎯 City Niche Finder",
+        el("span", { class: "cnf-ver", title: "Extension version" }, `v${version}`),
         spoofed ? el("span", { class: "cnf-geo", title: "Results geo-spoofed to the target city (UULE)" }, "📍") : null,
       ]),
       el("div", { class: "cnf-header-btns" }, [
         el("button", { class: "cnf-icon", title: "Rescan page", onclick: scan }, "⟳"),
+        el("button", { class: "cnf-icon", title: "Copy debug info (paste it to share)", onclick: copyDebug }, "🐞"),
         el("button", { class: "cnf-icon", title: "Favorites", onclick: () => chrome.runtime.sendMessage({ type: "open-favorites" }) }, "★"),
         el("button", { class: "cnf-icon", title: "Collapse", onclick: () => { state.collapsed = true; render(); } }, "×"),
       ]),
@@ -404,6 +407,71 @@
       dedicatedCount: state.organic.filter((r) => r.isDedicated).length,
     });
     toast("Saved to Favorites ★");
+  }
+
+  // Copy diagnostic info to the clipboard so page-structure issues can be
+  // shared and fixed precisely. Captures which container was found and the
+  // outerHTML of likely local-business blocks (public business info).
+  async function copyDebug() {
+    const rev = /\((\d[\d,]{0,6})\)(?!\s*[-\d])/;
+    const rootSel = document.querySelector("#center_col") ? "#center_col"
+      : document.querySelector("#rso") ? "#rso"
+      : document.querySelector("#search") ? "#search" : "body";
+    const root = document.querySelector(rootSel) || document.body;
+
+    const blocks = [];
+    let anyParenDigit = 0;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
+    let n;
+    while ((n = walker.nextNode())) {
+      const t = n.innerText || n.textContent || "";
+      if (/\(\d/.test(t) && t.length < 400) anyParenDigit++;
+      if (blocks.length >= 5) continue;
+      if (t.length > 400 || !rev.test(t)) continue;
+      if (blocks.some((b) => b.contains(n))) continue;
+      blocks.push(n);
+    }
+
+    // Fallback: if no review-token blocks, grab the "Businesses" heading's
+    // container so the real structure is still captured.
+    let bizContainer = "";
+    if (blocks.length === 0) {
+      const all = root.querySelectorAll("*");
+      for (const e of all) {
+        if ((e.textContent || "").trim().slice(0, 12).toLowerCase() === "businesses" && e.children.length === 0) {
+          const c = e.closest("div")?.parentElement || e.parentElement;
+          bizContainer = (c ? c.outerHTML : "").replace(/\s+/g, " ").slice(0, 3000);
+          break;
+        }
+      }
+    }
+
+    const lines = [
+      "=== City Niche Finder debug ===",
+      "version: v" + (chrome.runtime.getManifest().version || "?"),
+      "url: " + location.href.slice(0, 200),
+      `keyword="${state.keyword}" location="${state.location}"`,
+      "root container: " + rootSel,
+      `parsed: mapPack=${state.mapPack.length}, organic=${state.organic.length}`,
+      `elements with "(digit": ${anyParenDigit}`,
+      `review-token blocks: ${blocks.length}`,
+    ];
+    blocks.forEach((b, i) => {
+      lines.push(`\n--- block ${i + 1} outerHTML (truncated) ---`);
+      lines.push(b.outerHTML.replace(/\s+/g, " ").slice(0, 1200));
+    });
+    if (bizContainer) {
+      lines.push("\n--- 'Businesses' container outerHTML (truncated) ---");
+      lines.push(bizContainer);
+    }
+    const out = lines.join("\n");
+    try {
+      await navigator.clipboard.writeText(out);
+      toast("Debug copied — paste it to me");
+    } catch (e) {
+      console.log("[City Niche Finder debug]\n" + out);
+      toast("Debug printed to console (clipboard blocked)");
+    }
   }
 
   function toast(msg) {

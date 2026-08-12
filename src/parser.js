@@ -95,16 +95,28 @@ function isBefore(a, b) {
 
 // ---- map pack -------------------------------------------------------------
 
-// Rating + review-count, e.g. "5.0 ★★★★★ (2)" or "4.5(85)". The gap tolerates
-// star glyphs/spaces between the rating and the "(count)". The trailing
-// negative lookahead rejects phone numbers like "(830) 293-4750" — a real
-// review count is never immediately followed by more digits.
-const RATING_RE = /([0-5](?:\.\d)?)[^()\d\n]{0,14}\((\d[\d,]*)\)(?!\s*[-\d])/;
+// Review-count token: a parenthesized number NOT followed by more digits/dash
+// (so phone numbers like "(830) 293-4750" are excluded). This is the anchor for
+// detecting a local row — decoupled from the rating, which Google renders in a
+// separate element with star glyphs in between.
+const REVIEW_RE = /\((\d[\d,]{0,6})\)(?!\s*[-\d])/;
+// Rating: a standalone decimal 0.0–5.0 (won't match "24 hours" or "3+ years").
+const RATING_RE = /(?:^|[^\d.])([0-5]\.\d)(?![\d.])/;
 
-// A map-pack row must carry a business name, not just a rating — i.e. at least
-// one non-empty line that isn't the rating line.
-function hasName(txt) {
-  return txt.split("\n").some((l) => l.trim().length > 1 && !RATING_RE.test(l.trim()));
+// A local row must carry a business name — the first line with letters that
+// isn't the rating/review line or obvious metadata (hours, "years in business",
+// the section label, or action buttons). Careful not to reject real names that
+// merely start with "Open" (e.g. "Open Road Towing") or contain "Hour".
+function isMetaLine(l) {
+  return REVIEW_RE.test(l) ||
+    (/\b(open|closed)\b/i.test(l) && /(hour|am|pm|⋅|·|:)/i.test(l)) ||
+    /years?\s+in\s+business/i.test(l) ||
+    /^(sponsored|businesses|directions|website|call|rating|reviews)\b/i.test(l);
+}
+function nameLine(txt) {
+  return txt.split("\n").map((l) => l.trim()).find(
+    (l) => l.length > 1 && /[a-z]/i.test(l) && !isMetaLine(l)
+  ) || null;
 }
 
 // Parse the local "Map Pack" / "Businesses" block (top-3 style local results).
@@ -122,8 +134,8 @@ function parseMapPack(location, doc = document) {
     if (candidates.length >= 12) break;
     const txt = elText(node);
     if (!txt || txt.length > 400) continue;   // too big to be a single row
-    if (!RATING_RE.test(txt)) continue;
-    const named = hasName(txt);
+    if (!REVIEW_RE.test(txt)) continue;       // must have a review-count token
+    const named = !!nameLine(txt);
     // Collapse nested matches toward the smallest element that STILL has a name
     // (so we don't shrink a listing down to its bare rating badge).
     const ancestorIdx = candidates.findIndex((c) => c.contains(node));
@@ -145,11 +157,11 @@ function parseMapPack(location, doc = document) {
 
   return rows.map((el) => {
     const txt = elText(el);
-    const m = txt.match(RATING_RE);
-    const rating = m ? parseFloat(m[1]) : null;
-    const reviews = m ? parseInt(m[2].replace(/,/g, ""), 10) : null;
-    const lines = txt.split("\n").map((l) => l.trim()).filter(Boolean);
-    const name = lines.find((l) => !RATING_RE.test(l) && l.length > 1) || lines[0] || "Unknown";
+    const rev = txt.match(REVIEW_RE);
+    const reviews = rev ? parseInt(rev[1].replace(/,/g, ""), 10) : null;
+    const rat = txt.match(RATING_RE);
+    const rating = rat ? parseFloat(rat[1]) : null;
+    const name = nameLine(txt) || "Unknown";
     const lower = txt.toLowerCase();
     const hasWebsite = /\bwebsite\b/.test(lower) ||
       !!el.querySelector('a[href^="http"]:not([href*="google."])');
