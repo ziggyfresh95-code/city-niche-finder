@@ -40,6 +40,11 @@
   border: 1px solid #2a3c5c; border-radius: 6px; padding: 6px 8px; font-size: 12px;
 }
 #cnf-root .cnf-input::placeholder { color: #6b7c9c; }
+#cnf-root .cnf-go {
+  background: #1c74e8; color: #fff; border: none; border-radius: 6px;
+  padding: 6px 10px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
+}
+#cnf-root .cnf-go:hover { background: #175fc0; }
 
 #cnf-root .cnf-scores { display: flex; gap: 6px; margin-bottom: 10px; }
 #cnf-root .cnf-pill {

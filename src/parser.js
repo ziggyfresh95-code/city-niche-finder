@@ -112,18 +112,28 @@ function ownText(el) {
 // it — its presence is what tells us a local pack exists at all. No heading =
 // no local competition (which is itself a strong opportunity signal).
 function findLocalHeading(scope) {
-  const HEAD = /^(businesses|places|local results|more places)$/i;
+  const HEAD = /^(businesses|places|local results|more places)\b/i;
   const els = scope.querySelectorAll("h1,h2,h3,h4,[role='heading'],div,span");
-  for (const e of els) if (HEAD.test(ownText(e))) return e;
+  for (const e of els) {
+    const t = ownText(e);
+    if (t.length <= 20 && HEAD.test(t)) return e;
+  }
   return null;
 }
 
 // Organic results and ads carry review snippets too — exclude them so only the
-// true local pack is measured. These class/attribute markers are stable-ish
-// Google containers for organic blocks and ad units.
+// true local pack is measured. IMPORTANT: do NOT exclude generic wrappers like
+// .MjjYud, which Google also uses around the local pack; exclude only organic
+// text results (.tF2Cxc / an <h3.LC20lb> blue link) and ad units (aclk/pagead
+// links, .Tw0YHf, [data-pcu], [data-text-ad], a "Sponsored" label).
 function isOrganicOrAd(el) {
-  return !!(el.closest &&
-    el.closest(".g, .MjjYud, .tF2Cxc, .Tw0YHf, [data-text-ad], [data-pcu], .uEierd, .commercial-unit-desktop-top, .cUnQKe"));
+  if (!el.closest) return false;
+  if (el.closest(".tF2Cxc, .yuRUbf, [data-text-ad], [data-pcu], .Tw0YHf, .uEierd, .commercial-unit-desktop-top")) return true;
+  if (el.querySelector) {
+    if (el.querySelector("h3.LC20lb")) return true;                 // organic blue link
+    if (el.querySelector('a[href*="/aclk"], a[href*="googleadservices"], a[href*="/pagead/"]')) return true; // ad
+  }
+  return false;
 }
 
 // A local row must carry a business name — a line with letters that isn't the

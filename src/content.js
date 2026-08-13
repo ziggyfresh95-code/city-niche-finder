@@ -138,8 +138,12 @@
     const kwInput = el("input", { class: "cnf-input", placeholder: "Keyword", value: state.keyword });
     kwInput.addEventListener("change", (e) => { state.keyword = e.target.value; });
     const locInput = el("input", { class: "cnf-input", placeholder: "City, ST", value: state.location });
-    locInput.addEventListener("change", (e) => { state.location = e.target.value; recompute(); });
-    panel.appendChild(el("div", { class: "cnf-row" }, [kwInput, locInput]));
+    locInput.addEventListener("change", (e) => { state.location = e.target.value; });
+    const runSearch = () => newSearch(kwInput.value.trim(), locInput.value.trim());
+    kwInput.addEventListener("keydown", (e) => { if (e.key === "Enter") runSearch(); });
+    locInput.addEventListener("keydown", (e) => { if (e.key === "Enter") runSearch(); });
+    const searchBtn = el("button", { class: "cnf-go", title: "Run a new Google search here", onclick: runSearch }, "Search");
+    panel.appendChild(el("div", { class: "cnf-row" }, [kwInput, locInput, searchBtn]));
 
     // Scores
     panel.appendChild(el("div", { class: "cnf-scores" }, [
@@ -299,6 +303,18 @@
 
   function labeled(label, input) {
     return el("label", { class: "cnf-labeled" }, [el("span", {}, label), input]);
+  }
+
+  // Run a brand-new Google search from the sidebar (no need to reopen the popup
+  // in a new tab). Navigates the current tab; the sidebar re-scans on load.
+  function newSearch(keyword, locationStr) {
+    if (!keyword && !locationStr) { toast("Enter a keyword and city"); return; }
+    state.keyword = keyword;
+    state.location = locationStr;
+    const [c, s] = locationStr.split(",");
+    const locParts = { city: (c || "").trim(), state: (s || "").trim().slice(0, 2).toUpperCase() };
+    const url = buildSearchUrl(keyword, locParts, state.settings.geoSpoof);
+    window.location.href = url;
   }
 
   function openTurboSearch(city) {
