@@ -34,24 +34,21 @@ function scoreMapPack(listings, thresholds = DEFAULT_THRESHOLDS) {
   const avgReviews = withReviews.length
     ? withReviews.reduce((s, l) => s + l.reviews, 0) / withReviews.length
     : 0;
-  const locationMatches = listings.filter(l => l.locationMatch).length;
   const withWebsite = listings.filter(l => l.hasWebsite).length;
 
+  // Competition in a Map Pack comes from established, well-reviewed incumbents
+  // that already have websites. (City match isn't a signal here — every local
+  // listing is in the city by definition.)
   const reviewComponent = clamp((avgReviews / t.reviewThreshold) * 50, 0, 100);
-  const locationComponent = (locationMatches / listings.length) * 100;
   const websiteComponent = (withWebsite / listings.length) * 100;
 
-  const competition =
-    0.5 * reviewComponent +
-    0.25 * locationComponent +
-    0.25 * websiteComponent;
-
+  const competition = 0.7 * reviewComponent + 0.3 * websiteComponent;
   const score = Math.round(clamp(100 - competition, 0, 100));
 
+  const noSite = listings.length - withWebsite;
   const reasons = [
-    `${listings.length} listings, avg ${Math.round(avgReviews)} reviews (threshold ${t.reviewThreshold})`,
-    `${locationMatches}/${listings.length} match the city name`,
-    `${listings.length - withWebsite}/${listings.length} have no website`,
+    `${listings.length} listing${listings.length > 1 ? "s" : ""}, avg ${Math.round(avgReviews)} reviews (threshold ${t.reviewThreshold})`,
+    `${noSite}/${listings.length} have no website${noSite > 0 ? " — potential leads" : ""}`,
   ];
   return { score, color: colorFor(score), reasons };
 }

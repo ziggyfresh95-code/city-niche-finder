@@ -114,6 +114,28 @@ section("parser: local pack with star glyphs + phones");
   ok(mp.every((l) => l.locationMatch), "all rows match the city");
 }
 
+// ---- parser: aria-only review counts + Directions (real towing case) ----
+section("parser: local pack with aria-only reviews + Directions");
+{
+  const doc = loadFixture("local_aria_directions.html");
+  const mp = parser.parseMapPack("Midlothian, TX", doc);
+  eq(mp.length, 3, "3 local rows detected via rating + Directions (no literal parens)");
+  const names = mp.map((l) => l.name).join(" | ");
+  ok(/Open Road Towing/.test(names), "Open Road detected");
+  ok(/J&S Towing/.test(names), "J&S detected");
+  ok(!/YELP|BEST 10/i.test(names), "organic Yelp result excluded from map pack");
+  const dw = mp.find((l) => /D&W/.test(l.name));
+  eq(dw.reviews, 85, "review count read from aria-label");
+  eq(dw.rating, 4.5, "rating read from visible text");
+  const open = mp.find((l) => l.name === "Open Road Towing");
+  eq(open.reviews, 2, "aria review count parsed for Open Road");
+  eq(open.hasWebsite, true, "Open Road has a website");
+  const mpScore = scoring.scoreMapPack(mp);
+  // Mixed market (one 85-review incumbent, two near-zero) -> a moderate score,
+  // not the misleading 0 it used to produce.
+  ok(mpScore.score > 30 && mpScore.score < 70, `moderate market scores yellow-ish (${mpScore.score})`);
+}
+
 // ---- parser: no local pack, but organic + ads have review snippets ----
 section("parser: no local pack (organic/ads present)");
 {

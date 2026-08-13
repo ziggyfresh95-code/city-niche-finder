@@ -179,30 +179,43 @@ function reviewData(el, txt) {
   return { reviews, rating };
 }
 
+// The one thing local-pack listings always have that organic results and ads
+// never do: a "Directions" affordance (and usually a Maps link). This is the
+// most reliable local-row signal — review counts are often only in aria-labels.
+function hasDirections(el, txt) {
+  if (/(^|\n)\s*Directions\s*(\n|$)/.test(txt)) return true;
+  return !!(el.querySelector &&
+    el.querySelector('a[href*="/maps/dir"], a[data-url*="/maps/dir"], g-more-link a[href*="/maps"]'));
+}
+
+// True if the row looks like a local business listing.
+function isLocalRow(el, txt, rd) {
+  if (!nameLine(txt)) return false;
+  return hasDirections(el, txt) || rd.reviews != null || rd.rating != null;
+}
+
 // Parse the local "Map Pack" / "Businesses" block (top-3 style local results).
+// Scoped to the center column (excludes the right-hand knowledge/map panel) and
+// with organic results and ads filtered out, so the only rows that survive are
+// genuine local listings — no dependence on the section heading or on review
+// counts being literal "(N)" text.
 function parseMapPack(location, doc = document) {
   const scope = doc.querySelector("#center_col") || doc.querySelector("#rso") ||
     doc.querySelector("#search") || doc.body;
   if (!scope) return [];
-
-  // No local-pack heading => no local pack on this SERP.
-  const heading = findLocalHeading(scope);
-  if (!heading) return [];
 
   const candidates = [];
   const walker = doc.createTreeWalker(scope, NodeFilter.SHOW_ELEMENT);
   let node;
   while ((node = walker.nextNode())) {
     if (candidates.length >= 12) break;
-    if (!isBefore(heading, node)) continue;  // rows sit after the heading
     if (isOrganicOrAd(node)) continue;       // never count organic/ads
     const txt = elText(node);
-    if (!txt || txt.length > 400) continue;  // too big to be a single row
+    if (!txt || txt.length > 600) continue;  // too big to be a single row
     const rd = reviewData(node, txt);
-    if (rd.reviews == null && rd.rating == null) continue; // needs a review signal
+    if (!isLocalRow(node, txt, rd)) continue;
     const name = nameLine(txt);
-    if (!name) continue;
-    // Collapse nested matches toward the smallest element that still has a name.
+    // Collapse nested matches toward the smallest element that still qualifies.
     const idx = candidates.findIndex((c) => c.el.contains(node));
     if (idx >= 0) { candidates[idx] = { el: node, txt, rd, name }; continue; }
     if (candidates.some((c) => node.contains(c.el))) continue;
