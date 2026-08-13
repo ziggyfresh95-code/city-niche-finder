@@ -426,59 +426,67 @@
   }
 
   // Copy diagnostic info to the clipboard so page-structure issues can be
-  // shared and fixed precisely. Captures which container was found and the
-  // outerHTML of likely local-business blocks (public business info).
+  // shared and fixed precisely. Dumps the actual local-pack ("Places"/
+  // "Businesses") container HTML, which is what the parser needs to see.
   async function copyDebug() {
-    const rev = /\((\d[\d,]{0,6})\)(?!\s*[-\d])/;
-    const rootSel = document.querySelector("#center_col") ? "#center_col"
-      : document.querySelector("#rso") ? "#rso"
-      : document.querySelector("#search") ? "#search" : "body";
-    const root = document.querySelector(rootSel) || document.body;
+    const scope = document.querySelector("#center_col") ||
+      document.querySelector("#rso") || document.querySelector("#search") || document.body;
+    const txtOf = (e) => (e.innerText || e.textContent || "");
 
-    const blocks = [];
-    let anyParenDigit = 0;
-    const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
-    let n;
-    while ((n = walker.nextNode())) {
-      const t = n.innerText || n.textContent || "";
-      if (/\(\d/.test(t) && t.length < 400) anyParenDigit++;
-      if (blocks.length >= 5) continue;
-      if (t.length > 400 || !rev.test(t)) continue;
-      if (blocks.some((b) => b.contains(n))) continue;
-      blocks.push(n);
+    // Find the local-pack section heading.
+    const HEAD = /^(places|businesses|local results|more places)\b/i;
+    let heading = null;
+    for (const e of scope.querySelectorAll("h1,h2,h3,h4,[role='heading'],div,span")) {
+      let own = "";
+      for (const c of e.childNodes) if (c.nodeType === 3) own += c.nodeValue;
+      own = own.trim();
+      if (own.length <= 20 && HEAD.test(own)) { heading = e; break; }
     }
 
-    // Fallback: if no review-token blocks, grab the "Businesses" heading's
-    // container so the real structure is still captured.
-    let bizContainer = "";
-    if (blocks.length === 0) {
-      const all = root.querySelectorAll("*");
-      for (const e of all) {
-        if ((e.textContent || "").trim().slice(0, 12).toLowerCase() === "businesses" && e.children.length === 0) {
-          const c = e.closest("div")?.parentElement || e.parentElement;
-          bizContainer = (c ? c.outerHTML : "").replace(/\s+/g, " ").slice(0, 3000);
-          break;
-        }
+    // Climb from the heading to the container that wraps the business rows
+    // (the nearest ancestor holding 2+ "Directions" affordances).
+    let container = null;
+    if (heading) {
+      let c = heading.parentElement;
+      for (let i = 0; i < 10 && c; i++) {
+        if ((txtOf(c).match(/Directions/g) || []).length >= 2) { container = c; break; }
+        c = c.parentElement;
+      }
+      if (!container) container = heading.parentElement;
+    }
+
+    // Grab the first business "row": first descendant of the container whose
+    // text has a Directions affordance and a rating-ish number.
+    let firstRow = null;
+    if (container) {
+      for (const e of container.querySelectorAll("div,li,a")) {
+        const t = txtOf(e);
+        if (t.length < 400 && /Directions/.test(t) && /[0-5]\.\d/.test(t) && /[a-z]/i.test(t)) { firstRow = e; break; }
       }
     }
 
+    // Fresh parse right now (vs. the last scheduled scan) — distinguishes a
+    // timing miss from a logic miss.
+    let freshCount = -1;
+    try { freshCount = parseMapPack(state.location, document).length; } catch (e) { freshCount = "err:" + e.message; }
+
+    const clean = (s) => s.replace(/\s+/g, " ").trim();
     const lines = [
-      "=== City Niche Finder debug ===",
+      "=== City Niche Finder debug v2 ===",
       "version: v" + (chrome.runtime.getManifest().version || "?"),
-      "url: " + location.href.slice(0, 200),
-      `keyword="${state.keyword}" location="${state.location}"`,
-      "root container: " + rootSel,
-      `parsed: mapPack=${state.mapPack.length}, organic=${state.organic.length}`,
-      `elements with "(digit": ${anyParenDigit}`,
-      `review-token blocks: ${blocks.length}`,
+      "url: " + location.href.slice(0, 160),
+      `parsed(last scan): mapPack=${state.mapPack.length}, organic=${state.organic.length}`,
+      `parsed(fresh now): mapPack=${freshCount}`,
+      "local heading: " + (heading ? `'${clean(heading.textContent).slice(0, 20)}' <${heading.tagName} class="${clean(String(heading.className)).slice(0, 60)}">` : "NOT FOUND"),
+      "row container: " + (container ? `<${container.tagName} class="${clean(String(container.className)).slice(0, 60)}"> htmlLen=${container.outerHTML.length}` : "none"),
     ];
-    blocks.forEach((b, i) => {
-      lines.push(`\n--- block ${i + 1} outerHTML (truncated) ---`);
-      lines.push(b.outerHTML.replace(/\s+/g, " ").slice(0, 1200));
-    });
-    if (bizContainer) {
-      lines.push("\n--- 'Businesses' container outerHTML (truncated) ---");
-      lines.push(bizContainer);
+    if (firstRow) {
+      lines.push("\n--- FIRST BUSINESS ROW outerHTML (truncated 3500) ---");
+      lines.push(clean(firstRow.outerHTML).slice(0, 3500));
+    }
+    if (container) {
+      lines.push("\n--- CONTAINER outerHTML (truncated 5000) ---");
+      lines.push(clean(container.outerHTML).slice(0, 5000));
     }
     const out = lines.join("\n");
     try {
@@ -496,8 +504,15 @@
     setTimeout(() => t.remove(), 2200);
   }
 
-  // Kick off after the page settles a bit (map pack loads async).
-  if (getQueryParam()) {
-    setTimeout(scan, 900);
+  // Kick off after the page settles, and retry a few times — Google renders the
+  // local "Places"/"Businesses" pack asynchronously, often after the first scan.
+  let scanAttempts = 0;
+  function scanSoon(delay) {
+    setTimeout(async () => {
+      await scan();
+      scanAttempts++;
+      if (state.mapPack.length === 0 && scanAttempts < 5) scanSoon(1200);
+    }, delay);
   }
+  if (getQueryParam()) scanSoon(800);
 })();
