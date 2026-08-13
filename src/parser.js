@@ -128,7 +128,9 @@ function findLocalHeading(scope) {
 // links, .Tw0YHf, [data-pcu], [data-text-ad], a "Sponsored" label).
 function isOrganicOrAd(el) {
   if (!el.closest) return false;
-  if (el.closest(".tF2Cxc, .yuRUbf, [data-text-ad], [data-pcu], .Tw0YHf, .uEierd, .commercial-unit-desktop-top")) return true;
+  // #rhs is the right-hand column (map panel / knowledge panel) — its business
+  // labels repeat the local pack and must not be double-counted.
+  if (el.closest("#rhs, .tF2Cxc, .yuRUbf, [data-text-ad], [data-pcu], .Tw0YHf, .uEierd, .commercial-unit-desktop-top")) return true;
   if (el.querySelector) {
     if (el.querySelector("h3.LC20lb")) return true;                 // organic blue link
     if (el.querySelector('a[href*="/aclk"], a[href*="googleadservices"], a[href*="/pagead/"]')) return true; // ad
@@ -195,13 +197,14 @@ function isLocalRow(el, txt, rd) {
 }
 
 // Parse the local "Map Pack" / "Businesses" block (top-3 style local results).
-// Scoped to the center column (excludes the right-hand knowledge/map panel) and
-// with organic results and ads filtered out, so the only rows that survive are
-// genuine local listings — no dependence on the section heading or on review
-// counts being literal "(N)" text.
+// Scanned across the whole results region (the expanded "big map" layout puts
+// the local pack OUTSIDE #center_col), with the right-hand panel, organic
+// results, and ads filtered out — so the only rows that survive are genuine
+// local listings. No dependence on a section heading or on review counts being
+// literal "(N)" text; rows are identified by their "Directions" affordance.
 function parseMapPack(location, doc = document) {
-  const scope = doc.querySelector("#center_col") || doc.querySelector("#rso") ||
-    doc.querySelector("#search") || doc.body;
+  const scope = doc.querySelector("#rcnt") || doc.querySelector("#main") ||
+    doc.querySelector("#center_col") || doc.querySelector("#search") || doc.body;
   if (!scope) return [];
 
   const candidates = [];
