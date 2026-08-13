@@ -130,7 +130,7 @@ function isOrganicOrAd(el) {
   if (!el.closest) return false;
   // #rhs is the right-hand column (map panel / knowledge panel) — its business
   // labels repeat the local pack and must not be double-counted.
-  if (el.closest("#rhs, .tF2Cxc, .yuRUbf, [data-text-ad], [data-pcu], .Tw0YHf, .uEierd, .commercial-unit-desktop-top")) return true;
+  if (el.closest("#rhs, [data-is-ad], .tF2Cxc, .yuRUbf, [data-text-ad], [data-pcu], .Tw0YHf, .uEierd, .commercial-unit-desktop-top")) return true;
   if (el.querySelector) {
     if (el.querySelector("h3.LC20lb")) return true;                 // organic blue link
     if (el.querySelector('a[href*="/aclk"], a[href*="googleadservices"], a[href*="/pagead/"]')) return true; // ad
@@ -190,10 +190,12 @@ function hasDirections(el, txt) {
     el.querySelector('a[href*="/maps/dir"], a[data-url*="/maps/dir"], g-more-link a[href*="/maps"]'));
 }
 
-// True if the row looks like a local business listing.
-function isLocalRow(el, txt, rd) {
-  if (!nameLine(txt)) return false;
-  return hasDirections(el, txt) || rd.reviews != null || rd.rating != null;
+// True if the element is a local business listing ROW. Requiring the Directions
+// affordance (unique to local listings) also ensures the matched element is the
+// full row — which contains the Website link that lives OUTSIDE the inner
+// details block — so website detection works.
+function isLocalRow(el, txt) {
+  return !!nameLine(txt) && hasDirections(el, txt);
 }
 
 // Parse the local "Map Pack" / "Businesses" block (top-3 style local results).
@@ -215,8 +217,8 @@ function parseMapPack(location, doc = document) {
     if (isOrganicOrAd(node)) continue;       // never count organic/ads
     const txt = elText(node);
     if (!txt || txt.length > 600) continue;  // too big to be a single row
+    if (!isLocalRow(node, txt)) continue;
     const rd = reviewData(node, txt);
-    if (!isLocalRow(node, txt, rd)) continue;
     const name = nameLine(txt);
     // Collapse nested matches toward the smallest element that still qualifies.
     const idx = candidates.findIndex((c) => c.el.contains(node));

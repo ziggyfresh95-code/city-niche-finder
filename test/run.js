@@ -136,6 +136,25 @@ section("parser: local pack with aria-only reviews + Directions");
   ok(mpScore.score > 30 && mpScore.score < 70, `moderate market scores yellow-ish (${mpScore.score})`);
 }
 
+// ---- parser: real #rcnt big-map layout (ad excluded, website-outside-row) ----
+section("parser: real #rcnt rows (ad excluded, website detection)");
+{
+  const doc = loadFixture("real_rcnt_rows.html");
+  const mp = parser.parseMapPack("Midlothian, TX", doc);
+  eq(mp.length, 3, "3 real listings (Sponsored ad excluded)");
+  const names = mp.map((l) => l.name).join(" | ");
+  ok(!/DFW Diesel/.test(names), "Sponsored data-is-ad row excluded");
+  const dw = mp.find((l) => /D&W/.test(l.name));
+  eq(dw.hasWebsite, false, "D&W has no website (Directions only)");
+  eq(dw.reviews, 85, "D&W reviews parsed");
+  const js = mp.find((l) => /J&S/.test(l.name));
+  eq(js.hasWebsite, true, "J&S website (link outside details block) detected");
+  const noSite = mp.filter((l) => !l.hasWebsite).length;
+  eq(noSite, 1, "exactly 1 no-website lead (not 4)");
+  const s = scoring.scoreMapPack(mp);
+  ok(s.score > 30 && s.score < 70, `moderate score without the 210-review ad (${s.score})`);
+}
+
 // ---- parser: no local pack, but organic + ads have review snippets ----
 section("parser: no local pack (organic/ads present)");
 {
