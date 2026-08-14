@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="src/popup.css" />
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand">🎯 City Niche Finder</div>
+
+    <label class="lbl">Keyword</label>
+    <div class="kwrow">
+      <input id="keyword" class="inp" placeholder="e.g. towing" />
+      <button id="random" class="ghost" title="Suggest a random niche">🎲</button>
+    </div>
+    <div id="nichehint" class="hint"></div>
+
+    <label class="lbl">Location</label>
+    <input id="location" class="inp" placeholder="e.g. Tampa, FL" />
+
+    <button id="search" class="primary">Search Google & Score</button>
+    <label class="chk"><input id="geoSpoof" type="checkbox" /> 📍 Spoof location (accurate local results)</label>
+
+    <div class="split">
+      <button id="favorites" class="ghost wide">★ Favorites</button>
+      <button id="settings-toggle" class="ghost wide">⚙ Settings</button>
+    </div>
+
+    <div id="settings" class="settings hidden">
+      <label class="lbl">Review threshold</label>
+      <input id="reviewThreshold" class="inp" type="number" min="1" />
+      <label class="lbl">Referring-domain threshold</label>
+      <input id="rdThreshold" class="inp" type="number" min="1" />
+      <label class="lbl">Organic results to scan</label>
+      <input id="resultCount" class="inp" type="number" min="5" max="50" />
+
+      <div class="section">🚀 Turbo (nearby cities)</div>
+      <div class="grid2">
+        <div><label class="lbl">Radius (mi)</label><input id="turboDistance" class="inp" type="number" min="1" max="300" /></div>
+        <div><label class="lbl">Max cities</label><input id="turboLimit" class="inp" type="number" min="1" max="100" /></div>
+        <div><label class="lbl">Pop min</label><input id="turboPopMin" class="inp" type="number" min="0" /></div>
+        <div><label class="lbl">Pop max</label><input id="turboPopMax" class="inp" type="number" min="0" /></div>
+      </div>
+      <label class="chk"><input id="turboSameState" type="checkbox" /> Same state only</label>
+
+      <div class="section">Leads</div>
+      <label class="chk"><input id="autoCollectNoWebsite" type="checkbox" /> Auto-collect no-website listings as leads</label>
+
+      <button id="save-settings" class="primary small">Save settings</button>
+    </div>
+
+    <div class="foot">Tip: after the page loads, the sidebar appears on the right. Rate the niche/city and save leads there.</div>
+  </div>
+
+  <script src="src/niches.js"></script>
+  <script src="src/storage.js"></script>
+  <script src="src/uule.js"></script>
+  <script src="src/popup.js"></script>
+</body>
+</html>

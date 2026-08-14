@@ -1,0 +1,63 @@
+<!-- Mirrors the REAL "towing midlothian" big-map layout captured via debug:
+     - rows live under #rcnt (not #center_col), each a div[jscontroller=AtSb]
+     - Website/Directions links are siblings OUTSIDE the inner .rllt__details
+     - the first row is a Sponsored ad (data-is-ad="1") that must be excluded
+     - review counts are literal "(85)" AND in aria-labels ("85 user reviews")
+     Guards: #rcnt scope, ad exclusion, and whole-row website detection. -->
+<div id="rcnt">
+  <div class="businesses">
+    <div role="heading" aria-level="2">Businesses</div>
+
+    <!-- SPONSORED AD — must be excluded -->
+    <div jscontroller="AtSb" data-is-ad="1" id="ad1">
+      <div class="uMdZh tIxNaf rllt__borderless"><div class="VkpGBb"><div class="rllt__details">
+        <div class="xnnzce"><span>Sponsored</span></div>
+        <div class="dbg0pd" role="heading"><span>DFW Diesel Services</span></div>
+        <div><span aria-label="Rated 4.6 out of 5, 210 user reviews" role="img"><span aria-hidden="true">4.6</span><span aria-hidden="true">(210)</span></span> · Truck repair shop</div>
+        <div>3+ years in business · 5309 Superior Parkway</div>
+        <div>Open 24 hours · (817) 266-2186</div>
+      </div></div>
+      <a href="https://dfwdiesel.example.com">Website</a>
+      <a href="https://www.google.com/maps/dir//DFW+Diesel">Directions</a>
+      </div>
+    </div>
+
+    <!-- D&W — no website (only Directions) -->
+    <div jscontroller="AtSb" class="w7Dbne" id="r1">
+      <div class="uMdZh tIxNaf"><div class="VkpGBb"><div class="mTwRT"><div class="rllt__details">
+        <div class="dbg0pd" role="heading"><span>D&amp;W Towing &amp; Recovery Inc</span></div>
+        <div><span class="Y0A0hc" aria-label="Rated 4.5 out of 5, 85 user reviews" role="img"><span aria-hidden="true">4.5</span><span class="RDApEe" aria-hidden="true">(85)</span></span> · Towing service</div>
+        <div>3+ years in business · Midlothian, TX</div>
+        <div>Open 24 hours · (972) 617-0444</div>
+      </div></div></div>
+      <a href="/maps/dir//D%26W+Towing" data-url="/maps/dir//D%26W">Directions</a>
+      </div>
+    </div>
+
+    <!-- Open Road — has website -->
+    <div jscontroller="AtSb" class="w7Dbne" id="r2">
+      <div class="uMdZh tIxNaf"><div class="VkpGBb"><div class="mTwRT"><div class="rllt__details">
+        <div class="dbg0pd" role="heading"><span>Open Road Towing</span></div>
+        <div><span class="Y0A0hc" aria-label="Rated 5.0 out of 5, 2 user reviews" role="img"><span aria-hidden="true">5.0</span><span class="RDApEe" aria-hidden="true">(2)</span></span> · Towing service</div>
+        <div>Midlothian, TX</div>
+        <div>Open 24 hours · (830) 293-4750</div>
+      </div></div></div>
+      <a href="https://openroadtowing.example.com">Website</a>
+      <a href="/maps/dir//Open+Road+Towing">Directions</a>
+      </div>
+    </div>
+
+    <!-- J&S — has website -->
+    <div jscontroller="AtSb" class="w7Dbne" id="r3">
+      <div class="uMdZh tIxNaf"><div class="VkpGBb"><div class="mTwRT"><div class="rllt__details">
+        <div class="dbg0pd" role="heading"><span>J&amp;S Towing &amp; Recovery</span></div>
+        <div><span class="Y0A0hc" aria-label="Rated 5.0 out of 5, 1 user review" role="img"><span aria-hidden="true">5.0</span><span class="RDApEe" aria-hidden="true">(1)</span></span> · Towing service</div>
+        <div>35+ years in business · Midlothian, TX</div>
+        <div>Open 24 hours · (972) 777-4040</div>
+      </div></div></div>
+      <a href="https://tricity-towing.example.com/">Website</a>
+      <a href="/maps/dir//J%26S+Towing">Directions</a>
+      </div>
+    </div>
+  </div>
+</div>
